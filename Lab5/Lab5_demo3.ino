@@ -1,88 +1,39 @@
-/*  SevenSegmentLEDdisplay102a.ino
- *   
- *   
- *  Simple example of using Shift Register with a
- *  Single Digit Seven Segment LED Display
-*/
-// Globals
-const int dataPin = 14;  // blue wire to 74HC595 pin 14
-const int latchPin = 15; // green to 74HC595 pin 12
-const int clockPin = 16; // yellow to 74HC595 pin 11
+const int SER = 14; //data
+const int LATCH = 15; //RCLK
+const int CLOCK = 16; //SRCLK
+volatile int i, j;
 
-/* uncomment one of the following lines that describes your display
- *  and comment out the line that does not describe your display */
-const char common = 'a';    // common anode
-//const char common = 'c';    // common cathode
+byte sevenSegmentDisplay[10] ={
+B00000011,  //0   common anode not used in this lab
+B10011111,  //1
+B00100101,  //2
+B00001101,  //3
+B10011001,  //4
+B01001001,  //5
+B11000001,  //6
+B00011111,  //7
+B00000001,  //8
+B00011001   //9
+};
 
-bool decPt = true;  // decimal point display flag
- 
+
+
 void setup() {
-  // initialize I/O pins
-  pinMode(dataPin, OUTPUT);
-  pinMode(latchPin, OUTPUT);
-  pinMode(clockPin, OUTPUT);
+  //put your setup code here, to run once:
+  pinMode(SER, OUTPUT);
+  pinMode(LATCH, OUTPUT);
+  pinMode(CLOCK, OUTPUT);
 }
 
 void loop() {
-  decPt = !decPt; // display decimal point every other pass through loop
-
-  // generate characters to display for hexidecimal numbers 0 to F
-  for (int i = 0; i <= 9; i++) {
-    byte bits = myfnNumToBits(i) ;
-    if (decPt) {
-      bits = bits | B00000001;  // add decimal point if needed
+  // put your main code here, to run repeatedly:
+  for(i =0; i < 10; i++){
+    for(j = 0; j < 10; j++){
+      digitalWrite(LATCH, LOW);
+      shiftOut(SER, CLOCK, LSBFIRST, sevenSegmentDisplay[j]); //Always pass 2nd reigster first
+      shiftOut(SER, CLOCK, LSBFIRST, sevenSegmentDisplay[i]); 
+      digitalWrite(LATCH, HIGH);
+      delay(300);
     }
-    myfnUpdateDisplay(bits);    // display alphanumeric digit
-    delay(500);                 // pause for 1/2 second
-  }
-}
-
-void myfnUpdateDisplay(byte eightBits) {
-  if (common == 'a') {                  // using a common anonde display?
-    eightBits = eightBits ^ B11111111;  // then flip all bits using XOR 
-  }
-  digitalWrite(latchPin, LOW);  // prepare shift register for data
- 
-   shiftOut(dataPin, clockPin, LSBFIRST, eightBits);
-    shiftOut(dataPin, clockPin, LSBFIRST, 0); // send data
-  digitalWrite(latchPin, HIGH); // update display
-}
-
-byte myfnNumToBits(int someNumber) {
-  switch (someNumber) {
-    case 0:
-      return B11111100;
-      break;
-    case 1:
-      return B01100000;
-      break;
-    case 2:
-      return B11011010;
-      break;
-    case 3:
-      return B11110010;
-      break;
-    case 4:
-      return B01100110;
-      break;
-    case 5:
-      return B10110110;
-      break;
-    case 6:
-      return B10111110;
-      break;
-    case 7:
-      return B11100000;
-      break;
-    case 8:
-      return B11111110;
-      break;
-    case 9:
-      return B11110110;
-      break;
-    
-    default:
-      return B10010010; // Error condition, displays three vertical bars
-      break;   
   }
 }
